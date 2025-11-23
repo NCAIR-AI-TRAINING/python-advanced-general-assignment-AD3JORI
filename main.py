@@ -1,31 +1,39 @@
-from datetime import datetime
 import os
+from datetime import datetime, timedelta
 
-class DuplicateVisitorError(Exception):
-    pass
+LOG_FILE = "visitors.txt"
 
-class EarlyEntryError(Exception):
-    pass
+def log_visitor(name):
+    now = datetime.now()
+    last_name = None
 
-FILENAME = "visitors.txt"
+    # Read last visitor
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r") as f:
+            lines = f.read().splitlines()
+            if lines:
+                last_entry = lines[-1]
+                try:
+                    last_name, _ = last_entry.split(" | ")
+                except ValueError:
+                    last_name = last_entry
 
-def ensure_file():
-    pass
+    # Check duplicate
+    if last_name == name:
+        print(f"Duplicate visitor '{name}' detected. Not logged.")
+        return False
 
-def get_last_visitor():
-    pass
+    # Log visitor (without 5-minute rule yet)
+    with open(LOG_FILE, "a") as f:
+        f.write(f"{name}\n")
+    print(f"{name} logged successfully.")
+    return True
 
-def add_visitor(visitor_name):
-    pass
-
-def main():
-    ensure_file()
-    name = input("Enter visitor's name: ")
-    try:
-        add_visitor(name)
-        print("Visitor added successfully!")
-    except Exception as e:
-        print("Error:", e)
-
+# Testing loop
 if __name__ == "__main__":
-    main()
+    print("Visitor logging ready!")
+    while True:
+        visitor = input("Enter visitor name (or 'exit' to quit): ").strip()
+        if visitor.lower() == "exit":
+            break
+        log_visitor(visitor)
