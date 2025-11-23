@@ -3,18 +3,20 @@ from datetime import datetime, timedelta
 
 LOG_FILE = "visitors.txt"
 
-
-# Custom exception for duplicate visitors
+# Exceptions expected by the tests
 class DuplicateVisitorError(Exception):
+    """Raised when a visitor is the same as the last visitor."""
     pass
 
+class EarlyEntryError(Exception):
+    """Raised when a visitor tries to log in before 5 minutes have passed."""
+    pass
 
 def ensure_file():
     """Ensure the log file exists."""
     if not os.path.exists(LOG_FILE):
         with open(LOG_FILE, "w") as f:
-            pass  # just create empty file
-
+            pass  # just create an empty file
 
 def add_visitor(name):
     """
@@ -22,8 +24,8 @@ def add_visitor(name):
     1. Not the same as the last visitor.
     2. At least 5 minutes have passed since the last visitor.
 
-    Raises DuplicateVisitorError if visitor is duplicate.
-    Returns True if visitor logged successfully, False if within 5-minute wait.
+    Raises DuplicateVisitorError or EarlyEntryError as needed.
+    Returns True if visitor logged successfully.
     """
     ensure_file()
     now = datetime.now()
@@ -49,8 +51,7 @@ def add_visitor(name):
     # Check 5-minute wait
     if last_time and (now - last_time) < timedelta(minutes=5):
         wait_seconds = int((timedelta(minutes=5) - (now - last_time)).total_seconds())
-        print(f"Please wait {wait_seconds} more seconds before logging a new visitor.")
-        return False
+        raise EarlyEntryError(f"Please wait {wait_seconds} more seconds before logging a new visitor.")
 
     # Log visitor with timestamp
     with open(LOG_FILE, "a") as f:
@@ -59,8 +60,7 @@ def add_visitor(name):
     print(f"{name} logged successfully at {now.strftime('%H:%M:%S')}.")
     return True
 
-
-# Optional manual testing loop (won’t break autograder)
+# Optional manual testing loop
 if __name__ == "__main__":
     print("Visitor logging ready!")
     while True:
@@ -70,4 +70,6 @@ if __name__ == "__main__":
         try:
             add_visitor(visitor)
         except DuplicateVisitorError as e:
+            print(e)
+        except EarlyEntryError as e:
             print(e)
